@@ -24,7 +24,7 @@ export class ChatGateway implements OnModuleInit{
       const { name, id } = socket.handshake.auth;
 
       if ( !name && !id ) {
-        console.log('desconectando a', name )
+        console.log('desconectando cliente')
         socket.on('disconnect', () => {
           this.chatService.onClientDisconnected( id );  
           this.server.emit('on-clients-changed', this.chatService.getClients());
@@ -51,18 +51,15 @@ export class ChatGateway implements OnModuleInit{
         )
         console.log(data);
       })
-    });
-
-   
+    });  
   }
-
 
   @SubscribeMessage('send-message')
   handleMessage(
     @MessageBody() message: string,
     @ConnectedSocket() client: Socket,) {
 
-    const getFecha = () =>{
+      const getFecha = () =>{
         let date = new Date();
         let fecha = {
           'dia_semana_letra': getDaySemana(date),
@@ -75,45 +72,45 @@ export class ChatGateway implements OnModuleInit{
           'segundo': parseo_num(date.getSeconds()),
         }
         return fecha;        
-    }
+      }
 
-    const parseo_num = (arg : any) =>{
-      let valor = arg;
-      if(valor < 10){
-        valor = '0'+valor;
+      const parseo_num = (arg : any) =>{
+        let valor = arg;
+        if(valor < 10){
+          valor = '0'+valor;
+        }
+        return valor;
       }
-      return valor;
-    }
-    const getDaySemana = (fecha:any) => {
-      return [
-        'Domingo',
-        'Lunes',
-        'Martes',
-        'Miércoles',
-        'Jueves',
-        'Viernes',
-        'Sábado',
-      ][new Date(fecha).getDay()];
-    }
+      const getDaySemana = (fecha:any) => {
+        return [
+          'Domingo',
+          'Lunes',
+          'Martes',
+          'Miércoles',
+          'Jueves',
+          'Viernes',
+          'Sábado',
+        ][new Date(fecha).getDay()];
+      }
     
-    const getMes = (arg:any) =>{
-      let month = arg;
-      switch(arg){
-        case 0 : month = 'Enero'; break;
-        case 1 : month = 'Febrero'; break;
-        case 2 : month = 'Marzo'; break;
-        case 3 : month = 'Abril'; break;
-        case 4 : month = 'Mayo'; break;
-        case 5 : month = 'Junio'; break;
-        case 6 : month = 'Julio'; break;
-        case 7 : month = 'Agosto'; break;
-        case 8 : month = 'Septiembre'; break;
-        case 9 : month = 'Octubre'; break;
-        case 10 : month = 'Noviembre'; break;
-        case 11 : month = 'Diciembre'; break;
+      const getMes = (arg:any) =>{
+        let month = arg;
+        switch(arg){
+          case 0 : month = 'Enero'; break;
+          case 1 : month = 'Febrero'; break;
+          case 2 : month = 'Marzo'; break;
+          case 3 : month = 'Abril'; break;
+          case 4 : month = 'Mayo'; break;
+          case 5 : month = 'Junio'; break;
+          case 6 : month = 'Julio'; break;
+          case 7 : month = 'Agosto'; break;
+          case 8 : month = 'Septiembre'; break;
+          case 9 : month = 'Octubre'; break;
+          case 10 : month = 'Noviembre'; break;
+          case 11 : month = 'Diciembre'; break;
+        }
+        return month;
       }
-      return month;
-    }
       
 
       
