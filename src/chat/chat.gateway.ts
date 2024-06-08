@@ -1,5 +1,5 @@
 import { ConnectedSocket, MessageBody, SubscribeMessage, WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
-import { Get, OnModuleInit } from '@nestjs/common';
+import { Get, OnModuleInit, Post } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
 import { ChatService } from './chat.service';
 
@@ -7,10 +7,9 @@ import { ChatService } from './chat.service';
 
 @WebSocketGateway()
 export class ChatGateway implements OnModuleInit{
-
-  @Get('parte')
-  parte(){
-    console.log('hola');
+  @Get('/chat')
+  async parte(){
+    return  console.log('hola metodo get');
   }
 
   @WebSocketServer()
@@ -20,9 +19,11 @@ export class ChatGateway implements OnModuleInit{
 
 
   onModuleInit() {
+    
     this.server.on('connection', (socket: Socket) => {
+      //this.server.socketsJoin(socket.id);
+      socket.join(socket.id)
       const { name, id } = socket.handshake.auth;
-
       if ( !name && !id ) {
         console.log('desconectando cliente')
         socket.on('disconnect', () => {
@@ -38,6 +39,30 @@ export class ChatGateway implements OnModuleInit{
         socket.emit('msn-welcome', 'Bienvenido al al chat'); //Mensaje de bienvenida
         this.server.emit('msn-alerta-new-user', name); //Mensaje para notificar a todos de un nuevo usuario
       }
+      socket.on('ini-msn-private', data =>{
+        const receptor = this.chatService.getClient(data.id_receptor);
+        console.log('datos del receptor');
+        console.log(receptor);
+        let skt = receptor.socket;
+        this.server.to(skt).emit('msn-private',{
+          'tipo': 'private',
+          'name':name,
+          'message': data.msn,
+          'date':this.chatService.getFecha(),
+          'userId': id,
+          'nickname_receptor': 'nada',          
+        });
+        this.server.to(socket.id).emit('msn-private',{
+          'tipo': 'private',
+          'name':name,
+          'message': data.msn,
+          'date':this.chatService.getFecha(),
+          'userId': socket.id,
+          'nickname_receptor':receptor.name,
+        });
+        console.log('despues del envio');
+      })
+
       socket.on('upload-file', (data) =>{
         console.log('Archivo');
         this.server.emit('file-send',
@@ -58,77 +83,20 @@ export class ChatGateway implements OnModuleInit{
   handleMessage(
     @MessageBody() message: string,
     @ConnectedSocket() client: Socket,) {
-
-      const getFecha = () =>{
-        let date = new Date();
-        let fecha = {
-          'dia_semana_letra': getDaySemana(date),
-          'dia': date.getDay(),
-          'mes_letra': getMes(date.getMonth()),
-          'mes': date.getMonth() + 1,
-          'anio': date.getFullYear(),
-          'hora': parseo_num(date.getHours()),
-          'minuto': parseo_num(date.getMinutes()),
-          'segundo': parseo_num(date.getSeconds()),
-        }
-        return fecha;        
-      }
-
-      const parseo_num = (arg : any) =>{
-        let valor = arg;
-        if(valor < 10){
-          valor = '0'+valor;
-        }
-        return valor;
-      }
-      const getDaySemana = (fecha:any) => {
-        return [
-          'Domingo',
-          'Lunes',
-          'Martes',
-          'Miércoles',
-          'Jueves',
-          'Viernes',
-          'Sábado',
-        ][new Date(fecha).getDay()];
-      }
-    
-      const getMes = (arg:any) =>{
-        let month = arg;
-        switch(arg){
-          case 0 : month = 'Enero'; break;
-          case 1 : month = 'Febrero'; break;
-          case 2 : month = 'Marzo'; break;
-          case 3 : month = 'Abril'; break;
-          case 4 : month = 'Mayo'; break;
-          case 5 : month = 'Junio'; break;
-          case 6 : month = 'Julio'; break;
-          case 7 : month = 'Agosto'; break;
-          case 8 : month = 'Septiembre'; break;
-          case 9 : month = 'Octubre'; break;
-          case 10 : month = 'Noviembre'; break;
-          case 11 : month = 'Diciembre'; break;
-        }
-        return month;
-      }
-      
-
-      
       const { name, id } = client.handshake.auth;
-
       console.log({name, message});
-
       if ( !message ) {
         return;
       }
 
-      this.server.emit('on-message',
-        {
-          userId: client.id,
-          message: message,
-          name: name,
-          date : getFecha(),
-        })
+      this.server.emit('on-message',{
+        userId: client.id,
+        message: message,
+        name: name,
+        date : this.chatService.getFecha(),
+        tipo:'public',
+        'nickname_receptor': 'none',
+      })
   }
 
 }
