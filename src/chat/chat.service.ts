@@ -7,9 +7,11 @@ interface Client {
   socket : string;
 }
 
+const salasRomm = ['SALA GENERAL','SALA ', 'SALA 2', 'SALA 3', 'SALA 4'];
+
 @Injectable()
 export class ChatService {
-
+  
   private clients: Record<string, Client> = {};
 
   onClientConnected( client: Client ) {
@@ -19,6 +21,10 @@ export class ChatService {
   onClientDisconnected( id: string ) {
     delete this.clients[id];
     console.log(id)
+  }
+
+  getRoom = () =>{
+    return salasRomm;
   }
 
   getClient(id : string) {

@@ -3,7 +3,7 @@ import { Get, OnModuleInit, Post } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
 import { ChatService } from './chat.service';
 
-
+let room ='sala_general';
 
 @WebSocketGateway()
 export class ChatGateway implements OnModuleInit{
@@ -19,15 +19,13 @@ export class ChatGateway implements OnModuleInit{
 
 
   onModuleInit() {
-    
     this.server.on('connection', (socket: Socket) => {
-      //this.server.socketsJoin(socket.id);
-      socket.join(socket.id)
+      socket.join(room);
       const { name, id } = socket.handshake.auth;
       if ( !name && !id ) {
         console.log('desconectando cliente')
         socket.on('disconnect', () => {
-          this.chatService.onClientDisconnected( id );  
+          this.chatService.onClientDisconnected( id );
           this.server.emit('on-clients-changed', this.chatService.getClients());
           console.log('Cliente desconectado: ', socket.id);
         })
@@ -39,6 +37,36 @@ export class ChatGateway implements OnModuleInit{
         socket.emit('msn-welcome', 'Bienvenido al al chat'); //Mensaje de bienvenida
         this.server.emit('msn-alerta-new-user', name); //Mensaje para notificar a todos de un nuevo usuario
       }
+
+      socket.emit('room', this.chatService.getRoom());
+      
+      socket.on('joinroom', data =>{
+        socket.join(room);
+        console.log('Datos de Joinroom')
+        console.log(data);
+        this.server.to(data.room_id_close).emit('room_close',{
+          'tipo': 'general_off',
+          'name':name,
+          'message': name + ' ha dejado la '+data.room_close,
+          'date':this.chatService.getFecha(),
+          'userId': id,
+          'room':data.room_close_id,
+          'nickname_receptor': 'none',
+          });
+          
+        room = data.id;
+        socket.join(room);
+        this.server.to(room).emit('room_connect', {
+          'tipo': 'general_on',
+          'name':name,
+          'message':name + ' ha ingresado a '+data.room,
+          'date':this.chatService.getFecha(),
+          'userId': id,
+          'room':room,
+          'nickname_receptor': 'none',
+          });
+      })
+
       socket.on('ini-msn-private', data =>{
         const receptor = this.chatService.getClient(data.id_receptor);
         console.log('datos del receptor');
@@ -50,7 +78,8 @@ export class ChatGateway implements OnModuleInit{
           'message': data.msn,
           'date':this.chatService.getFecha(),
           'userId': id,
-          'nickname_receptor': 'nada',          
+          'room':name,
+          'nickname_receptor': 'none',
         });
         this.server.to(socket.id).emit('msn-private',{
           'tipo': 'private',
@@ -58,6 +87,7 @@ export class ChatGateway implements OnModuleInit{
           'message': data.msn,
           'date':this.chatService.getFecha(),
           'userId': socket.id,
+          'room':receptor.name,
           'nickname_receptor':receptor.name,
         });
         console.log('despues del envio');
@@ -76,7 +106,8 @@ export class ChatGateway implements OnModuleInit{
         )
         console.log(data);
       })
-    });  
+    });
+
   }
 
   @SubscribeMessage('send-message')
@@ -89,12 +120,13 @@ export class ChatGateway implements OnModuleInit{
         return;
       }
 
-      this.server.emit('on-message',{
+      this.server.to(room).emit('on-message',{
         userId: client.id,
         message: message,
         name: name,
         date : this.chatService.getFecha(),
         tipo:'public',
+        room: room,
         'nickname_receptor': 'none',
       })
   }
