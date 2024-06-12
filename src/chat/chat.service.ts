@@ -25,7 +25,6 @@ export class ChatService {
 
   onClientDisconnected( id: string ) {
     delete this.clients[id];
-    console.log(id)
   }
 
   getRoom = () =>{

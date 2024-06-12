@@ -95,31 +95,16 @@ export class ChatGateway implements OnModuleInit{
           'room':name,
           'nickname_receptor': 'none',
         });
-        // this.server.to(socket.id).emit('msn-private',{
-        //   'tipo': 'private',
-        //   'name':name,
-        //   'message': data.msn,
-        //   'date':this.chatService.getFecha(),
-        //   'userId': socket.id,
-        //   'room':receptor.name,
-        //   'nickname_receptor':receptor.name,
-        // });
+        
         console.log('despues del envio');
       })
 
-    //   socket.on('upload-file', (data) =>{
-    //     console.log('Archivo');
-    //     this.server.emit('file-send',
-    //       {
-    //         userId: socket.id,
-    //         message: 'Archivo',
-    //         name: name,
-    //         file: data,
-    //         date : {},
-    //       }
-    //     )
-    //     console.log(data);
-    //   })
+      socket.on('off-socket', data =>{
+        this.chatService.onClientDisconnected(id);
+         this.server.emit('on-clients-changed', this.chatService.getClients()); // Listado de clientes conectados
+      
+      })
+      
     });
 
   }
