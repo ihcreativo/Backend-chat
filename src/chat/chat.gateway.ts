@@ -19,9 +19,16 @@ export class ChatGateway implements OnModuleInit{
 
 
   onModuleInit() {
-    this.server.on('connection', (socket: Socket) => {
-      socket.join(room);
-      const { name, id } = socket.handshake.auth;
+    this.server.on('connection', (socket: Socket) => {    
+         socket.join(room);
+        const { name, id } = socket.handshake.auth;
+        if (socket.recovered) {
+        // recovery was successful: socket.id, socket.rooms and socket.data were restored
+            socket.emit('reconectar', this.chatService.getMensajeAll(id));
+        } else {
+        // new or unrecoverable session
+            console.log('no se puede recuperar infomracion');
+        }
       if ( !name && !id ) {
         console.log('desconectando cliente')
         socket.on('disconnect', () => {
@@ -30,6 +37,7 @@ export class ChatGateway implements OnModuleInit{
           this.server.emit('room_activas', this.chatService.getRoom());
           console.log('Cliente desconectado: ', socket.id);
         })
+        
 
       }else{
         console.log('Conectado',name);

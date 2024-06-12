@@ -44,11 +44,14 @@ export class ChatService {
     return Object.values( this.clients ); 
   }
 
-  setMensaje(arg) {
+  setMensaje(arg:any) {
     MensajeBackup.push(arg);
   }
   getMensaje(){
     return MensajeBackup[MensajeBackup.length -1];
+  }
+  getMensajeAll(id:any){
+    return  MensajeBackup.filter((elm) => elm.userId === id)
   }
  
   getFecha = () =>{
