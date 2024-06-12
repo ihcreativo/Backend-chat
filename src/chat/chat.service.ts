@@ -7,7 +7,15 @@ interface Client {
   socket : string;
 }
 
-const salasRomm = ['SALA GENERAL','SALA ', 'SALA 2', 'SALA 3', 'SALA 4'];
+let room_activas = [
+  {'room':'General', 'id':'general', 'tipo':'public', 'show':true, 'participante':''},
+  {'room':'Sala 1', 'id':'sala_1', 'tipo':'public', 'show':false, 'participante':''},
+  {'room':'Sala 2', 'id':'sala_2', 'tipo':'public', 'show':false, 'participante':''},
+  {'room':'Sala 3', 'id':'sala_3', 'tipo':'public', 'show':false, 'participante':''},
+  {'room':'Sala 4', 'id':'sala_4', 'tipo':'public', 'show':false, 'participante':''},
+];
+
+let MensajeBackup = [];
 
 @Injectable()
 export class ChatService {
@@ -24,7 +32,10 @@ export class ChatService {
   }
 
   getRoom = () =>{
-    return salasRomm;
+    return room_activas;
+  }
+  setRoom = (arg) =>{
+    room_activas.push(arg);
   }
 
   getClient(id : string) {
@@ -36,7 +47,13 @@ export class ChatService {
     return Object.values( this.clients ); 
   }
 
-  //otros servicios
+  setMensaje(arg) {
+    MensajeBackup.push(arg);
+  }
+  getMensaje(){
+    return MensajeBackup[MensajeBackup.length -1];
+  }
+ 
   getFecha = () =>{
     let date = new Date();
     let fecha = {

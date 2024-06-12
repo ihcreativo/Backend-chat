@@ -27,6 +27,7 @@ export class ChatGateway implements OnModuleInit{
         socket.on('disconnect', () => {
           this.chatService.onClientDisconnected( id );
           this.server.emit('on-clients-changed', this.chatService.getClients());
+          this.server.emit('room_activas', this.chatService.getRoom());
           console.log('Cliente desconectado: ', socket.id);
         })
 
@@ -34,6 +35,7 @@ export class ChatGateway implements OnModuleInit{
         console.log('Conectado',name);
         this.chatService.onClientConnected({ id: id, name: name, socket: socket.id}); // Agregamos cliente al listaod
         this.server.emit('on-clients-changed', this.chatService.getClients()); // Listado de clientes conectados
+        this.server.emit('room_activas', this.chatService.getRoom());
         socket.emit('msn-welcome', 'Bienvenido al al chat'); //Mensaje de bienvenida
         this.server.emit('msn-alerta-new-user', name); //Mensaje para notificar a todos de un nuevo usuario
       }
@@ -67,12 +69,16 @@ export class ChatGateway implements OnModuleInit{
           });
       })
 
+      socket.on('create-room-private', (data) =>{
+        //crear sala
+        this.chatService.setRoom(data.room);
+        this.server.emit('room_activas', this.chatService.getRoom());
+      })
+
       socket.on('ini-msn-private', data =>{
         const receptor = this.chatService.getClient(data.id_receptor);
-        console.log('datos del receptor');
-        console.log(receptor);
         let skt = receptor.socket;
-        this.server.to(skt).emit('msn-private',{
+        this.server.to(skt).emit('solicitud-chat-privated',{
           'tipo': 'private',
           'name':name,
           'message': data.msn,
@@ -81,15 +87,15 @@ export class ChatGateway implements OnModuleInit{
           'room':name,
           'nickname_receptor': 'none',
         });
-        this.server.to(socket.id).emit('msn-private',{
-          'tipo': 'private',
-          'name':name,
-          'message': data.msn,
-          'date':this.chatService.getFecha(),
-          'userId': socket.id,
-          'room':receptor.name,
-          'nickname_receptor':receptor.name,
-        });
+        // this.server.to(socket.id).emit('msn-private',{
+        //   'tipo': 'private',
+        //   'name':name,
+        //   'message': data.msn,
+        //   'date':this.chatService.getFecha(),
+        //   'userId': socket.id,
+        //   'room':receptor.name,
+        //   'nickname_receptor':receptor.name,
+        // });
         console.log('despues del envio');
       })
 
@@ -119,8 +125,7 @@ export class ChatGateway implements OnModuleInit{
       if ( !message ) {
         return;
       }
-
-      this.server.to(room).emit('on-message',{
+      let msn = {
         userId: client.id,
         message: message,
         name: name,
@@ -128,7 +133,9 @@ export class ChatGateway implements OnModuleInit{
         tipo:'public',
         room: room,
         'nickname_receptor': 'none',
-      })
+        }
+      this.chatService.setMensaje(msn);
+      this.server.to(room).emit('on-message',this.chatService.getMensaje())
   }
 
 }
