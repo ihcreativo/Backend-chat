@@ -8,11 +8,8 @@ interface Client {
 }
 
 let room_activas = [
-  {'room':'General', 'id':'general', 'tipo':'public', 'show':true, 'participante':''},
+  {'room':'Chat principal', 'id':'general', 'tipo':'public', 'show':true, 'participante':''},
   {'room':'Sala 1', 'id':'sala_1', 'tipo':'public', 'show':false, 'participante':''},
-  {'room':'Sala 2', 'id':'sala_2', 'tipo':'public', 'show':false, 'participante':''},
-  {'room':'Sala 3', 'id':'sala_3', 'tipo':'public', 'show':false, 'participante':''},
-  {'room':'Sala 4', 'id':'sala_4', 'tipo':'public', 'show':false, 'participante':''},
 ];
 
 let MensajeBackup = [];

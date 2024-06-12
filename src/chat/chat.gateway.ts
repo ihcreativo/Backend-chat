@@ -99,19 +99,19 @@ export class ChatGateway implements OnModuleInit{
         console.log('despues del envio');
       })
 
-      socket.on('upload-file', (data) =>{
-        console.log('Archivo');
-        this.server.emit('file-send',
-          {
-            userId: socket.id,
-            message: 'Archivo',
-            name: name,
-            file: data,
-            date : {},
-          }
-        )
-        console.log(data);
-      })
+    //   socket.on('upload-file', (data) =>{
+    //     console.log('Archivo');
+    //     this.server.emit('file-send',
+    //       {
+    //         userId: socket.id,
+    //         message: 'Archivo',
+    //         name: name,
+    //         file: data,
+    //         date : {},
+    //       }
+    //     )
+    //     console.log(data);
+    //   })
     });
 
   }
